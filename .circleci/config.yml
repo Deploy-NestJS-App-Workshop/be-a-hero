@@ -1,0 +1,56 @@
+jobs:
+# Build the docker image and deploy it to Heroku.
+build_and_deploy:
+  docker:
+    - image: nestjs-users:2022.09
+  steps:
+    # For using docker commands.
+    #      - setup_remote_docker:
+    #          version: 19.03.13
+
+    # Build the docker image
+    - checkout
+    - run: docker build .
+
+    # Deploy to Heroku
+    - heroku/install
+    - run: heroku container:login
+    - heroku/push-docker-image:
+        process-types: web
+    - heroku/release-docker-image:
+        process-types: web
+
+orbs:
+  # For using Heroku CLI commandｓ.
+  heroku: circleci/heroku@1.2.6
+
+version: 2.1
+workflows:
+  heroku_deploy:
+    jobs:
+      - build_and_deploy
+#-----------
+
+#workflows:
+#  version: 2
+#
+#  build-deploy:
+#    jobs:
+#      - npm
+#      - lint:
+#          requires:
+#            - npm
+#      - build:
+#          requires:
+#            - lint
+#      deploy-dev:
+#        machine: true
+#        steps:
+#          - checkout
+#          - run:
+#              name: Build and push Docker image to Heroku
+#              command: |
+#                sudo curl https://cli-assets.heroku.com/install.sh | sh
+#                HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:login
+#                HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:push -a nestjs-users web
+#                HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:release -a nestjs-users web
